@@ -2,11 +2,10 @@
     "name": "ws_task",
     "version": "1.0.0",
     "description": "Template for the WebSocket remote control task",
-    "main": "index.js",
-    "type": "module",
+    "main": "index.ts",
     "scripts": {
-        "start": "node ./index.js",
-        "start:dev": "nodemon ./index.js",
+        "start": "node ./src/ws_server/index.ts",
+        "start:dev": "nodemon ./src/ws_server/index.ts",
         "test": "echo \"Error: no test specified\" && exit 1",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
     },
