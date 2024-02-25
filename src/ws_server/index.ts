@@ -8,18 +8,9 @@ interface Player {
   password: string;
 }
 
-interface RegistrationResponse {
-  type: string;
-  data: {
-    name: string;
-    index?: number;
-    error: boolean;
-    errorText: string;
-  };
-  id: number;
-}
-
 const players: Player[] = [];
+const rooms: { [key: string]: Player[] } = {};
+const winners = new Map<number, { name: string; wins: number }>();
 
 const registerPlayer = (name: string, password: string) => {
   const existingPlayer = players.find(player => player.name === name);
@@ -31,6 +22,55 @@ const registerPlayer = (name: string, password: string) => {
   players.push(newPlayer);
 
   return  { type: "reg", data: JSON.stringify({ name, index: players.length - 1, error: false, errorText: "" }), id: 0 };
+};
+
+const createRoom = (playerName: string) => {
+  const roomId = Math.random().toString(36).substring(7);
+  rooms[roomId] = [{ name: playerName, password: '' }];
+  return { type: "create_room", data: '', id: 0 };
+};
+
+const updateRoomState = () => {
+  const roomsWithOnePlayer = Object.entries(rooms)
+    .filter(([roomId, room]) => room.length === 1)
+    .map(([roomId, room]) => {
+      return {
+        roomId,
+        roomUsers: room.map((user, index) => ({ name: user.name, index }))
+      };
+    });
+
+    const updateMessage = {
+    type: "update_room",
+    data: JSON.stringify(roomsWithOnePlayer),
+    id: 0,
+  };
+
+  return updateMessage;
+};
+
+const updateWinners = () => {
+  const updateMessage = {
+    type: "update_winners",
+    data: JSON.stringify(winners),
+    id: 0,
+  };
+  return updateMessage;
+};
+
+const addUserToRoom = (roomId: string, playerId: string) => {
+  if (rooms[roomId]) {
+    const player = players.find(player => player.name === playerId);
+    if (player) {
+      rooms[roomId].push(player);
+      delete rooms[roomId];
+      return { type: "create_game", data: { idGame: Math.random().toString(36).substring(7), idPlayer: Math.random().toString(36).substring(7) }, id: Math.random() };
+    } else {
+      return { type: "error", data: "Player not found", id: Math.random() };
+    }
+  } else {
+    return { type: "error", data: "Room not found", id: Math.random() };
+  }
 };
 
 const startServers = () => {
@@ -54,14 +94,33 @@ const startServers = () => {
     });
 
     wsStream.on('data', async (data) => {
-      // Обработка сообщений о регистрации и входе игрока
+      console.log('data', data)
       try {
         const message = JSON.parse(data);
         if (message.type === "reg") {
           const dataParse = JSON.parse(message.data);
           const response = registerPlayer(dataParse.name, dataParse.password);
           wsStream.write(JSON.stringify(response));
-        } 
+          const updateMessage = updateRoomState();
+          const updateWinner = updateWinners();
+          wsStream.write(JSON.stringify(updateMessage));
+          wsStream.write(JSON.stringify(updateWinner));
+        } else if (message.type === "create_room") {
+          const response = createRoom(message.data);
+          wsStream.write(JSON.stringify(response));
+          const updateMessage = updateRoomState();
+          const updateWinner = updateWinners();
+          wsStream.write(JSON.stringify(updateMessage));
+          wsStream.write(JSON.stringify(updateWinner));
+        } else if (message.type === "add_user_to_room") {
+          const dataParse = message.data;
+          const response = addUserToRoom(dataParse.indexRoom, dataParse.id);
+          wsStream.write(JSON.stringify(response));
+          const updateMessage = updateRoomState();
+          const updateWinner = updateWinners();
+          wsStream.write(JSON.stringify(updateMessage));
+          wsStream.write(JSON.stringify(updateWinner));
+        }
       } catch (error) {
         console.error('Error processing message:', error);
       }
