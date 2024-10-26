@@ -7,6 +7,7 @@ export class Player {
   password: string;
   ws: WebSocket;
   ships: Ship[];
+  wins: number;
 
   constructor(name: string, password: string, ws: WebSocket) {
     this.id = crypto.randomUUID().substring(0, 9);
@@ -14,6 +15,7 @@ export class Player {
     this.password = password;
     this.ws = ws;
     this.ships = [];
+    this.wins = 0;
   }
 }
 

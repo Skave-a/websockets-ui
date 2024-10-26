@@ -24,6 +24,18 @@ export const RoomUpdate = () => {
   });
 };
 
+export const updateWinners = (winners: { name: string; wins: number }[]) => {
+  const message = JSON.stringify({
+    type: 'update_winners',
+    data: JSON.stringify(winners),
+    id: 0,
+  });
+
+  players.forEach((player) => {
+    player.ws.send(message);
+  });
+};
+
 export const sendTurnInfo = (roomId: string, currentPlayerId: string) => {
   const room = getRoomById(roomId);
 
@@ -45,17 +57,29 @@ export const sendTurnInfo = (roomId: string, currentPlayerId: string) => {
 };
 
 export const finishGame = (winPlayerId: string) => {
-  const message = JSON.stringify({
-    type: 'finish',
-    data: JSON.stringify({
-      winPlayer: winPlayerId,
-    }),
-    id: 0,
-  });
+  const winner = players.find((player) => player.id === winPlayerId);
 
-  players.forEach((player) => {
-    player.ws.send(message);
-  });
+  if (winner) {
+    winner.wins += 1;
+
+    const winnersData = players.map((player) => ({
+      name: player.name,
+      wins: player.wins,
+    }));
+
+    const message = JSON.stringify({
+      type: 'finish',
+      data: JSON.stringify({
+        winPlayer: winPlayerId,
+        winners: winnersData,
+      }),
+      id: 0,
+    });
+
+    players.forEach((player) => {
+      player.ws.send(message);
+    });
+  }
 };
 
 export const isHit = (ship: Ship, x: number, y: number): boolean => {
