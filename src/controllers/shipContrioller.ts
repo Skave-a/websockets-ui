@@ -1,30 +1,17 @@
 import { WebSocket } from 'ws';
 import { getRoomById, removeRoom } from '../models/roomModel';
 import { players } from '../models/playerModel';
-import { broadcastRoomUpdate } from './roomController';
 
 export const handleAddShips = (ws: WebSocket, data: string) => {
   const { gameId, ships, indexPlayer } = JSON.parse(data);
-  console.log('JSON.parse(data) :>> ', JSON.parse(data));
   const room = getRoomById(gameId);
   const player = players.find((p) => p.id === indexPlayer);
 
-  if (!room) {
+  if (!room || !player) {
     ws.send(
       JSON.stringify({
         type: 'error',
-        data: { message: 'Room not found' },
-        id: 0,
-      }),
-    );
-    return;
-  }
-
-  if (!player || !room.players.some((p) => p.id === indexPlayer)) {
-    ws.send(
-      JSON.stringify({
-        type: 'error',
-        data: { message: 'Player not found in the room' },
+        data: { message: 'Room or player not found' },
         id: 0,
       }),
     );
@@ -33,7 +20,7 @@ export const handleAddShips = (ws: WebSocket, data: string) => {
 
   player.ships = ships;
 
-  if (room.players.every((p) => p.ships)) {
+  if (room.players.every((p) => p.ships.length > 0)) {
     room.players.forEach((p) => {
       p.ws.send(
         JSON.stringify({
@@ -46,7 +33,6 @@ export const handleAddShips = (ws: WebSocket, data: string) => {
         }),
       );
     });
+    removeRoom(room.id);
   }
-  removeRoom(room.id);
-  broadcastRoomUpdate();
 };

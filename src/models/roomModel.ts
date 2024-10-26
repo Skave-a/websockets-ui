@@ -12,9 +12,7 @@ export class Room {
   addPlayer(player: Player) {
     if (this.players.length < 2) {
       this.players.push(player);
-      return true;
     }
-    return false;
   }
 
   isFull() {

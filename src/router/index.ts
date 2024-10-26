@@ -5,6 +5,7 @@ import {
   handleCreateRoom,
 } from '../controllers/roomController';
 import { handleAddShips } from '../controllers/shipContrioller';
+import { handleAttack } from '../controllers/gameConroller';
 
 export const websocketRouter = (ws: WebSocket, message: any) => {
   const parsedMessage = JSON.parse(message);
@@ -21,6 +22,9 @@ export const websocketRouter = (ws: WebSocket, message: any) => {
       break;
     case 'add_ships':
       handleAddShips(ws, parsedMessage.data);
+      break;
+    case 'attack':
+      handleAttack(ws, parsedMessage.data);
       break;
     default:
       ws.send(
