@@ -1,23 +1,28 @@
-import { PlayerType } from '../types';
+import { WebSocket } from 'ws';
+import { Ship } from '../types';
 
 export class Player {
-  public id: string;
-  public name: string;
-  public password: string;
+  id: string;
+  name: string;
+  password: string;
+  ws: WebSocket;
+  ships: Ship[];
 
-  constructor(name: string, password: string) {
+  constructor(name: string, password: string, ws: WebSocket) {
+    this.id = crypto.randomUUID().substring(0, 9);
     this.name = name;
     this.password = password;
-    this.id = Player.generateId();
-  }
-
-  private static generateId(): string {
-    return crypto.randomUUID().slice(0, 9);
+    this.ws = ws;
+    this.ships = [];
   }
 }
 
-const players: PlayerType[] = [];
+export const players: Player[] = [];
 
 export const addPlayer = (player: Player) => {
   players.push(player);
+};
+
+export const getPlayerByName = (name: string): Player | undefined => {
+  return players.find((player) => player.name === name);
 };

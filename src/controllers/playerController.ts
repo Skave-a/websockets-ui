@@ -1,29 +1,57 @@
 import { WebSocket } from 'ws';
-import { addPlayer, Player } from '../models/playerModel';
+import { Player, addPlayer, getPlayerByName } from '../models/playerModel';
+import { broadcastRoomUpdate } from './roomController';
 
 export const handleRegistration = (ws: WebSocket, data: string) => {
-  const parsedData = JSON.parse(data);
-  const { name, password } = parsedData;
+  const { name, password } = JSON.parse(data);
 
   if (!name || !password) {
-    throw new Error('Name and password are required');
+    ws.send(
+      JSON.stringify({
+        type: 'reg',
+        data: {
+          error: true,
+          errorText: 'Name and password are required',
+        },
+        id: 0,
+      }),
+    );
+    return;
   }
 
-  const newPlayer = new Player(name, password);
-  addPlayer(newPlayer);
+  let player = getPlayerByName(name);
 
-  const dataStr = JSON.stringify({
-    name: newPlayer.name,
-    index: newPlayer.id,
-    error: false,
-    errorText: '',
-  });
+  if (player) {
+    if (player.password !== password) {
+      ws.send(
+        JSON.stringify({
+          type: 'reg',
+          data: {
+            error: true,
+            errorText: 'Incorrect password',
+          },
+          id: 0,
+        }),
+      );
+      return;
+    }
+    player.ws = ws;
+  } else {
+    player = new Player(name, password, ws);
+    addPlayer(player);
+  }
 
-  const response = {
-    type: 'reg',
-    data: dataStr,
-    id: 0,
-  };
-
-  ws.send(JSON.stringify(response));
+  ws.send(
+    JSON.stringify({
+      type: 'reg',
+      data: JSON.stringify({
+        name: player.name,
+        index: player.id,
+        error: false,
+        errorText: '',
+      }),
+      id: 0,
+    }),
+  );
+  broadcastRoomUpdate();
 };

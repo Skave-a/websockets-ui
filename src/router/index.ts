@@ -1,5 +1,10 @@
 import { WebSocket } from 'ws';
 import { handleRegistration } from '../controllers/playerController';
+import {
+  handleAddUserToRoom,
+  handleCreateRoom,
+} from '../controllers/roomController';
+import { handleAddShips } from '../controllers/shipContrioller';
 
 export const websocketRouter = (ws: WebSocket, message: any) => {
   const parsedMessage = JSON.parse(message);
@@ -9,10 +14,13 @@ export const websocketRouter = (ws: WebSocket, message: any) => {
       handleRegistration(ws, parsedMessage.data);
       break;
     case 'create_room':
-      // handleCreateRoom(ws, parsedMessage.data);
+      handleCreateRoom(ws);
       break;
     case 'add_user_to_room':
-      // handleAddUserToRoom(ws, parsedMessage.data);
+      handleAddUserToRoom(ws, parsedMessage.data);
+      break;
+    case 'add_ships':
+      handleAddShips(ws, parsedMessage.data);
       break;
     default:
       ws.send(
