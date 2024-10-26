@@ -5,7 +5,7 @@ import {
   handleCreateRoom,
 } from '../controllers/roomController';
 import { handleAddShips } from '../controllers/shipContrioller';
-import { handleAttack, handleRandomAttack } from '../controllers/gameConroller';
+import { handleAttack, handleRandomAttack, handleSinglePlay } from '../controllers/gameConroller';
 
 export const websocketRouter = (ws: WebSocket, message: any) => {
   const parsedMessage = JSON.parse(message);
@@ -28,6 +28,9 @@ export const websocketRouter = (ws: WebSocket, message: any) => {
       break;
     case 'randomAttack':
       handleRandomAttack(ws, parsedMessage.data);
+      break;
+    case 'single_play':
+      handleSinglePlay(ws);
       break;
     default:
       ws.send(

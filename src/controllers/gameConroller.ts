@@ -1,6 +1,6 @@
 import { WebSocket } from 'ws';
-import { players } from '../models/playerModel';
-import { getRoomById } from '../models/roomModel';
+import { Player, players } from '../models/playerModel';
+import { addRoom, getRoomById, Room } from '../models/roomModel';
 import { finishGame, isHit, isShipSunk, sendTurnInfo } from '../utils';
 import { shotType } from '../types';
 
@@ -58,16 +58,17 @@ const handleTurn = (
   if (hitShip) {
     status = isShipSunk(hitShip, room) ? 'killed' : 'shot';
     room.attackedPositions.push({ x, y });
+    room.currentTurnId = attackerId;
+    sendTurnInfo(room.id, attackerId);
   } else {
     room.attackedPositions.push({ x, y });
+    room.currentTurnId = defenderId;
+    sendTurnInfo(room.id, defenderId);
   }
 
   room.attackedPositions.push({ x, y });
 
   sendAttackMessage(ws, defender.ws, attackerId, x, y, status);
-
-  room.currentTurnId = defender.id;
-  sendTurnInfo(room.id, defender.id);
 
   if (defender.ships.every((ship) => isShipSunk(ship, room))) {
     finishGame(attackerId);
@@ -120,4 +121,24 @@ export const handleRandomAttack = (ws: WebSocket, data: string) => {
   } else {
     sendErrorMessage(ws, 'It is not your turn to attack');
   }
+};
+
+export const handleSinglePlay = (ws: WebSocket) => {
+  const player = players.find((p) => p.ws === ws);
+  const playerName = new Player(player?.name ?? '', '', ws);
+
+  const room = new Room();
+  room.addPlayer(playerName);
+  addRoom(room);
+
+  const message = JSON.stringify({
+    type: 'single_play_start',
+    data: {
+      roomId: room.id,
+      message: `Welcome to single play, ${playerName.name}!`,
+    },
+    id: 0,
+  });
+
+  ws.send(message);
 };
