@@ -17,3 +17,5 @@ export type Ship = {
   length: number;
   type: 'small' | 'medium' | 'large' | 'huge';
 };
+
+export type shotType = 'shot' | 'killed' | 'miss' | undefined;

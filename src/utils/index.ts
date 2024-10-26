@@ -1,5 +1,5 @@
 import { players } from '../models/playerModel';
-import { getRoomById, rooms } from '../models/roomModel';
+import { getRoomById, Room, rooms } from '../models/roomModel';
 import { Ship } from '../types';
 
 export const RoomUpdate = () => {
@@ -62,7 +62,7 @@ export const isHit = (ship: Ship, x: number, y: number): boolean => {
   const { position, direction, length } = ship;
   const { x: shipX, y: shipY } = position;
 
-  if (direction) {
+  if (!direction) {
     for (let i = 0; i < length; i++) {
       if (shipX + i === x && shipY === y) {
         return true;
@@ -79,25 +79,17 @@ export const isHit = (ship: Ship, x: number, y: number): boolean => {
   return false;
 };
 
-const attackedPositions: { x: number; y: number }[] = [];
-
-export const isShipSunk = (ship: Ship): boolean => {
-  const shipPositions = [];
+export const isShipSunk = (ship: Ship, room: Room): boolean => {
   const { position, direction, length } = ship;
+  const { x: shipX, y: shipY } = position;
 
-  if (direction) {
-    for (let i = 0; i < length; i++) {
-      shipPositions.push({ x: position.x + i, y: position.y });
-    }
-  } else {
-    for (let i = 0; i < length; i++) {
-      shipPositions.push({ x: position.x, y: position.y + i });
+  for (let i = 0; i < length; i++) {
+    const x = !direction ? shipX + i : shipX;
+    const y = !direction ? shipY : shipY + i;
+    if (!room.attackedPositions.some((pos) => pos.x === x && pos.y === y)) {
+      return false;
     }
   }
 
-  return shipPositions.every((pos) =>
-    attackedPositions.some(
-      (atkPos) => atkPos.x === pos.x && atkPos.y === pos.y,
-    ),
-  );
+  return true;
 };

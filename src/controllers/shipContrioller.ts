@@ -26,10 +26,10 @@ export const handleAddShips = (ws: WebSocket, data: string) => {
       p.ws.send(
         JSON.stringify({
           type: 'start_game',
-          data: {
+          data: JSON.stringify({
             ships: p.ships,
             currentPlayerIndex: p.id,
-          },
+          }),
           id: 0,
         }),
       );

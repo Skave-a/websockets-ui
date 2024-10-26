@@ -4,11 +4,13 @@ export class Room {
   id: string;
   players: Player[];
   currentTurnId: string;
+  attackedPositions: { x: number; y: number }[];
 
   constructor() {
     this.id = crypto.randomUUID().substring(0, 9);
     this.players = [];
     this.currentTurnId = '';
+    this.attackedPositions = [];
   }
 
   addPlayer(player: Player) {
