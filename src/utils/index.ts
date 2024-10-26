@@ -1,14 +1,17 @@
 import { players } from '../models/playerModel';
-import { rooms } from '../models/roomModel';
+import { getRoomById, rooms } from '../models/roomModel';
+import { Ship } from '../types';
 
 export const RoomUpdate = () => {
-  const roomData = rooms.map((room) => ({
-    roomId: room.id,
-    roomUsers: room.players.map((player) => ({
-      name: player.name,
-      index: player.id,
-    })),
-  }));
+  const roomData = rooms
+    .filter((room) => !room.isFull())
+    .map((room) => ({
+      roomId: room.id,
+      roomUsers: room.players.map((player) => ({
+        name: player.name,
+        index: player.id,
+      })),
+    }));
 
   const message = JSON.stringify({
     type: 'update_room',
@@ -21,7 +24,13 @@ export const RoomUpdate = () => {
   });
 };
 
-export const sendTurnInfo = (currentPlayerId: string) => {
+export const sendTurnInfo = (roomId: string, currentPlayerId: string) => {
+  const room = getRoomById(roomId);
+
+  if (!room) {
+    return;
+  }
+
   const message = JSON.stringify({
     type: 'turn',
     data: JSON.stringify({
@@ -30,7 +39,7 @@ export const sendTurnInfo = (currentPlayerId: string) => {
     id: 0,
   });
 
-  players.forEach((player) => {
+  room.players.forEach((player) => {
     player.ws.send(message);
   });
 };
@@ -47,4 +56,48 @@ export const finishGame = (winPlayerId: string) => {
   players.forEach((player) => {
     player.ws.send(message);
   });
+};
+
+export const isHit = (ship: Ship, x: number, y: number): boolean => {
+  const { position, direction, length } = ship;
+  const { x: shipX, y: shipY } = position;
+
+  if (direction) {
+    for (let i = 0; i < length; i++) {
+      if (shipX + i === x && shipY === y) {
+        return true;
+      }
+    }
+  } else {
+    for (let i = 0; i < length; i++) {
+      if (shipX === x && shipY + i === y) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+const attackedPositions: { x: number; y: number }[] = [];
+
+export const isShipSunk = (ship: Ship): boolean => {
+  const shipPositions = [];
+  const { position, direction, length } = ship;
+
+  if (direction) {
+    for (let i = 0; i < length; i++) {
+      shipPositions.push({ x: position.x + i, y: position.y });
+    }
+  } else {
+    for (let i = 0; i < length; i++) {
+      shipPositions.push({ x: position.x, y: position.y + i });
+    }
+  }
+
+  return shipPositions.every((pos) =>
+    attackedPositions.some(
+      (atkPos) => atkPos.x === pos.x && atkPos.y === pos.y,
+    ),
+  );
 };

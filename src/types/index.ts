@@ -8,6 +8,7 @@ export type PlayerType = {
 export type RoomType = {
   id: string;
   players: PlayerType[];
+  currentTurnId: string;
 };
 
 export type Ship = {

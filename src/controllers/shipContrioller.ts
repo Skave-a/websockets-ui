@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { getRoomById, removeRoom } from '../models/roomModel';
+import { getRoomById } from '../models/roomModel';
 import { players } from '../models/playerModel';
 import { sendTurnInfo } from '../utils';
 
@@ -34,7 +34,8 @@ export const handleAddShips = (ws: WebSocket, data: string) => {
         }),
       );
     });
-    removeRoom(room.id);
-    sendTurnInfo(player.id);
+
+    room.currentTurnId = player.id;
+    sendTurnInfo(room.id, player.id);
   }
 };

@@ -3,10 +3,12 @@ import { Player } from './playerModel';
 export class Room {
   id: string;
   players: Player[];
+  currentTurnId: string;
 
   constructor() {
     this.id = crypto.randomUUID().substring(0, 9);
     this.players = [];
+    this.currentTurnId = '';
   }
 
   addPlayer(player: Player) {
