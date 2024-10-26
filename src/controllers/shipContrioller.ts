@@ -1,6 +1,7 @@
 import { WebSocket } from 'ws';
 import { getRoomById, removeRoom } from '../models/roomModel';
 import { players } from '../models/playerModel';
+import { sendTurnInfo } from '../utils';
 
 export const handleAddShips = (ws: WebSocket, data: string) => {
   const { gameId, ships, indexPlayer } = JSON.parse(data);
@@ -34,5 +35,6 @@ export const handleAddShips = (ws: WebSocket, data: string) => {
       );
     });
     removeRoom(room.id);
+    sendTurnInfo(player.id);
   }
 };

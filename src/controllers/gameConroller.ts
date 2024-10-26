@@ -43,7 +43,6 @@ export const handleAttack = (ws: WebSocket, data: string) => {
     return;
   }
 
-  // Проверяем, попал ли выстрел в корабль
   let status: 'miss' | 'killed' | 'shot' = 'miss';
   const hitShip = defender.ships.find((ship) => {
     const isHit =
